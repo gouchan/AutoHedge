@@ -1,15 +1,14 @@
 # Example usage
-from loguru import logger
 from autohedge.main import AutomatedTradingSystem
 
+# Define the stocks to analyze
+stocks = ["NVDA"]
 
-if __name__ == "__main__":
+# Initialize the trading system with the specified stocks
+trading_system = AutomatedTradingSystem(stocks)
 
-    try:
-        stocks = ["NVDA"]
-        trading_system = AutomatedTradingSystem(stocks)
-        print(trading_system.run_trading_cycle(task = "Let's analyze nvidia to see if we should buy it, we have 50k$ in allocation "))
+# Define the task for the trading cycle
+task = "Let's analyze nvidia to see if we should buy it, we have 50k$ in allocation"
 
-    except Exception as e:
-        logger.error(f"Critical error in trading system: {str(e)}")
-        raise
+# Run the trading cycle and print the results
+print(trading_system.run_trading_cycle(task=task))

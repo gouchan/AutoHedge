@@ -11,8 +11,7 @@ from swarms import Agent
 from tickr_agent.main import TickrAgent
 
 model = OpenAIChat(
-    model_name = "gpt-4o",
-    openai_api_key = os.getenv("OPENAI_API_KEY")
+    model_name="gpt-4o", openai_api_key=os.getenv("OPENAI_API_KEY")
 )
 
 
@@ -381,16 +380,14 @@ class AutomatedTradingSystem:
                     task=task,
                     thesis=thesis,
                     risk_assessment=risk_assessment,
-                    current_stock = stock,
+                    current_stock=stock,
                     order=order,
                 )
 
                 logs.append(log.model_dump_json(indent=4))
-                
+
             return logs
 
         except Exception as e:
             logger.error(f"Error in trading cycle: {str(e)}")
             raise
-
-
