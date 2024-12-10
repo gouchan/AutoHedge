@@ -310,7 +310,7 @@ class QuantAnalyst:
             raise
 
 
-class AutomatedTradingSystem:
+class AutoFund:
     """
     Main trading system that coordinates all agents and manages the trading cycle.
 

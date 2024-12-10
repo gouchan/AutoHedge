@@ -51,13 +51,13 @@ WORKSPACE_DIR="agent_workspace"
 
 ```python
 # Example usage
-from autohedge import AutomatedTradingSystem
+from autohedge import AutoFund
 
 # Define the stocks to analyze
 stocks = ["NVDA"]
 
 # Initialize the trading system with the specified stocks
-trading_system = AutomatedTradingSystem(stocks)
+trading_system = AutoFund(stocks)
 
 # Define the task for the trading cycle
 task = "Let's analyze nvidia to see if we should buy it, we have 50k$ in allocation"
@@ -124,7 +124,7 @@ class AutoHedgeOutput(BaseModel):
 AutoHedge can be configured through environment variables or initialization parameters:
 
 ```python
-trading_system = AutomatedTradingSystem(
+trading_system = AutoFund(
     name="CustomStrategy",
     description="My Trading Strategy",
     stocks=["NVDA", "AAPL"],
@@ -285,7 +285,7 @@ flowchart LR
 ### Class Structure
 ```mermaid
 classDiagram
-    class AutomatedTradingSystem {
+    class AutoFund {
         +String name
         +String description
         +List stocks
@@ -314,10 +314,10 @@ classDiagram
         +generate_order()
     }
     
-    AutomatedTradingSystem --> TradingDirector
-    AutomatedTradingSystem --> QuantAnalyst
-    AutomatedTradingSystem --> RiskManager
-    AutomatedTradingSystem --> ExecutionAgent
+    AutoFund --> TradingDirector
+    AutoFund --> QuantAnalyst
+    AutoFund --> RiskManager
+    AutoFund --> ExecutionAgent
 ```
 
 ## 🤝 Contributing
