@@ -1,3 +1,5 @@
-torch
-zetascale
 swarms
+tickr-agent
+pydantic
+loguru
+swarm-models
