@@ -9,7 +9,7 @@
 [![Documentation Status](https://readthedocs.org/projects/autohedge/badge/?version=latest)](https://autohedge.readthedocs.io)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-AutoHedge is an enterprise-grade autonomous trading system powered by swarm intelligence and advanced AI agents. It provides a comprehensive framework for automated market analysis, risk management, and trade execution.
+Build your autonomous hedge fund in minutes. AutoHedge harnesses the power of swarm intelligence and AI agents to automate market analysis, risk management, and trade execution.
 
 ## 🌟 Features
 
