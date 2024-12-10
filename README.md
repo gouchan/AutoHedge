@@ -196,8 +196,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Swarms](https://github.com/swarms-ai) for the AI agent framework
-- [Tickr Agent](https://github.com/tickr-agent) for market data integration
+- [Swarms](https://swarms.ai) for the AI agent framework
+- [Tickr Agent](https://github.com/The-Swarm-Corporation/tickr-agent) for market data integration
 
 ## 📞 Support
 
