@@ -201,9 +201,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- Documentation: [https://autohedge.readthedocs.io](https://autohedge.readthedocs.io)
+<!-- - Documentation: [https://autohedge.readthedocs.io](https://autohedge.readthedocs.io) -->
 - Issue Tracker: [GitHub Issues](https://github.com/The-Swarm-Corporation/AutoHedge/issues)
-- Discord: [Join our community](https://discord.gg/autohedge)
+- Discord: [Join our community](https://swarms.ai)
 
 ## 🚨 Disclaimer
 
