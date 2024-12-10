@@ -369,9 +369,6 @@ class AutoFund:
                 order = self.execution.generate_order(
                     stock, thesis, risk_assessment
                 )
-                # logger.info(
-                #     f"Generated order for {stock}: {order}"
-                # )
 
                 log = AutoHedgeOutput(
                     name=self.name,
