@@ -180,6 +180,146 @@ assessment = risk_manager.assess_risk(
 )
 ```
 
+# Diagrams
+
+## 🏗️ System Architecture
+
+### High-Level Component Overview
+```mermaid
+flowchart TB
+    subgraph Client
+        A[AutoHedge Client] --> B[Trading System]
+    end
+    
+    subgraph Agents["Multi-Agent System"]
+        B --> C{Director Agent}
+        C --> D[Quant Agent]
+        C --> E[Risk Agent]
+        C --> F[Execution Agent]
+        
+        D --> G[Technical Analysis]
+        D --> H[Statistical Analysis]
+        
+        E --> I[Risk Assessment]
+        E --> J[Position Sizing]
+        
+        F --> K[Order Generation]
+        F --> L[Trade Execution]
+    end
+    
+    subgraph Output
+        K --> M[JSON Output]
+        L --> N[Trade Logs]
+    end
+```
+
+### Trading Cycle Sequence
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant D as Director
+    participant Q as Quant
+    participant R as Risk
+    participant E as Execution
+    
+    C->>D: Initialize Trading Cycle
+    activate D
+    D->>D: Generate Thesis
+    D->>Q: Request Analysis
+    activate Q
+    Q-->>D: Return Analysis
+    deactivate Q
+    D->>R: Request Risk Assessment
+    activate R
+    R-->>D: Return Risk Profile
+    deactivate R
+    D->>E: Generate Order
+    activate E
+    E-->>D: Return Order Details
+    deactivate E
+    D-->>C: Return Complete Analysis
+    deactivate D
+```
+
+### Trade State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> Initialization
+    Initialization --> ThesisGeneration
+    
+    ThesisGeneration --> QuantAnalysis
+    QuantAnalysis --> RiskAssessment
+    
+    RiskAssessment --> OrderGeneration: Risk Approved
+    RiskAssessment --> ThesisGeneration: Risk Rejected
+    
+    OrderGeneration --> OrderExecution
+    OrderExecution --> Monitoring
+    
+    Monitoring --> ThesisGeneration: New Cycle
+    Monitoring --> [*]: Complete
+```
+
+### Data Flow
+```mermaid
+flowchart LR
+    subgraph Input
+        A[Market Data] --> B[Technical Indicators]
+        A --> C[Fundamental Data]
+    end
+    
+    subgraph Processing
+        B --> D[Quant Analysis]
+        C --> D
+        D --> E[Risk Analysis]
+        E --> F[Order Generation]
+    end
+    
+    subgraph Output
+        F --> G[Trade Orders]
+        F --> H[Risk Reports]
+        F --> I[Performance Metrics]
+    end
+```
+
+### Class Structure
+```mermaid
+classDiagram
+    class AutomatedTradingSystem {
+        +String name
+        +String description
+        +List stocks
+        +Path output_dir
+        +run_trading_cycle()
+    }
+    
+    class TradingDirector {
+        +Agent director_agent
+        +TickrAgent tickr
+        +generate_thesis()
+    }
+    
+    class QuantAnalyst {
+        +Agent quant_agent
+        +analyze()
+    }
+    
+    class RiskManager {
+        +Agent risk_agent
+        +assess_risk()
+    }
+    
+    class ExecutionAgent {
+        +Agent execution_agent
+        +generate_order()
+    }
+    
+    AutomatedTradingSystem --> TradingDirector
+    AutomatedTradingSystem --> QuantAnalyst
+    AutomatedTradingSystem --> RiskManager
+    AutomatedTradingSystem --> ExecutionAgent
+```
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
@@ -204,10 +344,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- - Documentation: [https://autohedge.readthedocs.io](https://autohedge.readthedocs.io) -->
 - Issue Tracker: [GitHub Issues](https://github.com/The-Swarm-Corporation/AutoHedge/issues)
 - Discord: [Join our community](https://swarms.ai)
-
-## 🚨 Disclaimer
-
-AutoHedge is provided for informational purposes only. It is not financial advice and should not be used as a sole basis for making investment decisions. Always conduct your own research and consider seeking professional financial advice.
 
 ---
 Created with ❤️ by [The Swarm Corporation](https://github.com/The-Swarm-Corporation)
