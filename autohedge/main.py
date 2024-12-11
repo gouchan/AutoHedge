@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 from datetime import datetime
@@ -7,7 +8,7 @@ from typing import Dict, List, Optional
 from loguru import logger
 from pydantic import BaseModel
 from swarm_models import OpenAIChat
-from swarms import Agent
+from swarms import Agent, create_file_in_folder
 from tickr_agent.main import TickrAgent
 
 model = OpenAIChat(
@@ -53,15 +54,25 @@ Your comprehensive analysis will be instrumental in refining the trading strateg
 
 class AutoHedgeOutput(BaseModel):
     id: str = uuid.uuid4().hex
-    name: Optional[str] = None
-    description: Optional[str] = None
-    stocks: Optional[list] = None
-    task: Optional[str] = None
     thesis: Optional[str] = None
     risk_assessment: Optional[str] = None
     order: Optional[str] = None
+    decision: str = None
     timestamp: str = datetime.now().isoformat()
     current_stock: str
+    
+    
+class AutoHedgeOutputMain(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    id: str = uuid.uuid4().hex
+    stocks: Optional[list] = None
+    task: Optional[str] = None
+    timestamp: str = datetime.now().isoformat()
+    logs: List[AutoHedgeOutput] = None
+    
+    
+
 
 
 # Risk Assessment Agent
@@ -107,6 +118,7 @@ class RiskManager:
             agent_name="Risk-Manager",
             system_prompt=RISK_PROMPT,
             llm=model,
+            output_type="str",
             max_loops=1,
             verbose=True,
             context_length=16000,
@@ -132,13 +144,22 @@ class RiskManager:
 
 
 # Execution Agent
-EXECUTION_PROMPT = """You are a Trade Execution AI. Your responsibilities:
-1. Generate structured order parameters
-2. Set precise entry/exit levels
-3. Determine order types
-4. Specify time constraints
+EXECUTION_PROMPT = """You are a Trade Execution AI. Your primary objective is to execute trades with precision and accuracy. Your key responsibilities include:
 
-Provide exact trade execution details in structured format.
+1. **Generating structured order parameters**: Define the essential details of the trade, including the stock symbol, quantity, and price.
+2. **Setting precise entry/exit levels**: Determine the exact points at which to enter and exit the trade, ensuring optimal profit potential and risk management.
+3. **Determining order types**: Choose the most suitable order type for the trade, such as market order, limit order, or stop-loss order, based on market conditions and trade strategy.
+4. **Specifying time constraints**: Define the timeframe for the trade, including the start and end dates, to ensure timely execution and minimize exposure to market volatility.
+
+To execute trades effectively, provide exact trade execution details in a structured format, including:
+
+* Stock symbol and quantity
+* Entry and exit prices
+* Order type (market, limit, stop-loss, etc.)
+* Time constraints (start and end dates, time in force)
+* Any additional instructions or special requirements
+
+By following these guidelines, you will ensure that trades are executed efficiently, minimizing potential losses and maximizing profit opportunities.
 """
 
 
@@ -148,6 +169,7 @@ class ExecutionAgent:
             agent_name="Execution-Agent",
             system_prompt=EXECUTION_PROMPT,
             llm=model,
+            output_type="str",
             max_loops=1,
             verbose=True,
             context_length=16000,
@@ -196,18 +218,11 @@ class TradingDirector:
             agent_name="Trading-Director",
             system_prompt=DIRECTOR_PROMPT,
             llm=model,
+            output_type="str",
             max_loops=1,
             verbose=True,
             context_length=16000,
         )
-        self.tickr = TickrAgent(
-            stocks=stocks,
-            max_loops=1,
-            workers=10,
-            retry_attempts=1,
-            context_length=16000,
-        )
-
     def generate_thesis(
         self,
         task: str = "Generate a thesis for the stock",
@@ -223,6 +238,15 @@ class TradingDirector:
             TradingThesis: Generated thesis
         """
         logger.info(f"Generating thesis for {stock}")
+        
+        self.tickr = TickrAgent(
+            stocks=[stock],
+            max_loops=1,
+            workers=10,
+            retry_attempts=1,
+            context_length=16000,
+        )
+
         try:
             market_data = self.tickr.run(
                 f"{task} Analyze current market conditions and key metrics for {stock}"
@@ -244,6 +268,11 @@ class TradingDirector:
             )
             raise
 
+    def make_decision(self, task: str, thesis: str, *args, **kwargs):
+        return self.director_agent.run(
+            f"According to the thesis, {thesis}, should we execute this order: {task}"
+        )
+
 
 class QuantAnalyst:
     """
@@ -263,6 +292,7 @@ class QuantAnalyst:
             agent_name="Quant-Analyst",
             system_prompt=QUANT_PROMPT,
             llm=model,
+            output_type="str",
             max_loops=1,
             verbose=True,
             context_length=16000,
@@ -309,7 +339,6 @@ class QuantAnalyst:
             )
             raise
 
-
 class AutoFund:
     """
     Main trading system that coordinates all agents and manages the trading cycle.
@@ -329,7 +358,18 @@ class AutoFund:
         name: str = "autohedge",
         description: str = "fully autonomous hedgefund",
         output_dir: str = "outputs",
+        output_file_path: str = None,
     ):
+        """
+        Initialize the AutoFund class.
+
+        Args:
+            stocks (List[str]): List of stock tickers to trade
+            name (str, optional): Name of the trading system. Defaults to "autohedge".
+            description (str, optional): Description of the trading system. Defaults to "fully autonomous hedgefund".
+            output_dir (str, optional): Directory for storing outputs. Defaults to "outputs".
+            output_file_path (str, optional): Path to the output file. Defaults to None.
+        """
         self.name = name
         self.description = description
         self.stocks = stocks
@@ -341,10 +381,26 @@ class AutoFund:
         self.quant = QuantAnalyst()
         self.risk = RiskManager()
         self.execution = ExecutionAgent()
-        self.logs = []
+        self.logs = AutoHedgeOutputMain(
+            name=self.name,
+            description=self.description,
+            stocks = stocks,
+            task = "",
+            logs = [],
+        )
 
-    def run_trading_cycle(self, task: str, *args, **kwargs):
-        """Execute one complete trading cycle for all stocks"""
+    def run(self, task: str, *args, **kwargs):
+        """
+        Execute one complete trading cycle for all stocks.
+
+        Args:
+            task (str): The task to be executed.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            List: List of logs for each stock.
+        """
         logger.info("Starting trading cycle")
         logs = []
 
@@ -369,21 +425,33 @@ class AutoFund:
                 order = self.execution.generate_order(
                     stock, thesis, risk_assessment
                 )
+                
+                order = str(order)
+
+                # Final decision
+                decision = self.director.make_decision(
+                    order, thesis
+                )
 
                 log = AutoHedgeOutput(
-                    name=self.name,
-                    description=self.description,
-                    stocks=self.stocks,
-                    task=task,
                     thesis=thesis,
                     risk_assessment=risk_assessment,
                     current_stock=stock,
                     order=order,
+                    decision=decision,
                 )
 
-                logs.append(log.model_dump_json(indent=4))
+                # logs.append(log.model_dump_json(indent=4))
+                self.logs.task = task
+                self.logs.logs.append(log)
 
-            return logs
+            create_file_in_folder(
+                self.output_dir,
+                f"analysis-{uuid.uuid4().hex}.json",
+                self.logs.model_dump_json(indent=4)
+            )
+            
+            return self.logs.model_dump_json(indent=4)
 
         except Exception as e:
             logger.error(f"Error in trading cycle: {str(e)}")
