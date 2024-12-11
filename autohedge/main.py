@@ -1,4 +1,3 @@
-import json
 import os
 import uuid
 from datetime import datetime
@@ -60,8 +59,8 @@ class AutoHedgeOutput(BaseModel):
     decision: str = None
     timestamp: str = datetime.now().isoformat()
     current_stock: str
-    
-    
+
+
 class AutoHedgeOutputMain(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
@@ -70,9 +69,6 @@ class AutoHedgeOutputMain(BaseModel):
     task: Optional[str] = None
     timestamp: str = datetime.now().isoformat()
     logs: List[AutoHedgeOutput] = None
-    
-    
-
 
 
 # Risk Assessment Agent
@@ -223,6 +219,7 @@ class TradingDirector:
             verbose=True,
             context_length=16000,
         )
+
     def generate_thesis(
         self,
         task: str = "Generate a thesis for the stock",
@@ -238,7 +235,7 @@ class TradingDirector:
             TradingThesis: Generated thesis
         """
         logger.info(f"Generating thesis for {stock}")
-        
+
         self.tickr = TickrAgent(
             stocks=[stock],
             max_loops=1,
@@ -339,6 +336,7 @@ class QuantAnalyst:
             )
             raise
 
+
 class AutoFund:
     """
     Main trading system that coordinates all agents and manages the trading cycle.
@@ -384,9 +382,9 @@ class AutoFund:
         self.logs = AutoHedgeOutputMain(
             name=self.name,
             description=self.description,
-            stocks = stocks,
-            task = "",
-            logs = [],
+            stocks=stocks,
+            task="",
+            logs=[],
         )
 
     def run(self, task: str, *args, **kwargs):
@@ -402,7 +400,6 @@ class AutoFund:
             List: List of logs for each stock.
         """
         logger.info("Starting trading cycle")
-        logs = []
 
         try:
             for stock in self.stocks:
@@ -425,13 +422,11 @@ class AutoFund:
                 order = self.execution.generate_order(
                     stock, thesis, risk_assessment
                 )
-                
+
                 order = str(order)
 
                 # Final decision
-                decision = self.director.make_decision(
-                    order, thesis
-                )
+                decision = self.director.make_decision(order, thesis)
 
                 log = AutoHedgeOutput(
                     thesis=thesis,
@@ -448,9 +443,9 @@ class AutoFund:
             create_file_in_folder(
                 self.output_dir,
                 f"analysis-{uuid.uuid4().hex}.json",
-                self.logs.model_dump_json(indent=4)
+                self.logs.model_dump_json(indent=4),
             )
-            
+
             return self.logs.model_dump_json(indent=4)
 
         except Exception as e:
