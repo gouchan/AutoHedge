@@ -10,6 +10,8 @@ from swarm_models import OpenAIChat
 from swarms import Agent, create_file_in_folder
 from tickr_agent.main import TickrAgent
 
+# from autohedge.crypto_agent_wrapper import CryptoAgentWrapper
+
 model = OpenAIChat(
     model_name="gpt-4o", openai_api_key=os.getenv("OPENAI_API_KEY")
 )
@@ -206,7 +208,10 @@ class TradingDirector:
     """
 
     def __init__(
-        self, stocks: List[str], output_dir: str = "outputs"
+        self,
+        stocks: List[str],
+        output_dir: str = "outputs",
+        cryptos: List[str] = None,
     ):
 
         logger.info("Initializing Trading Director")
@@ -220,10 +225,13 @@ class TradingDirector:
             context_length=16000,
         )
 
+        # self.crypto_agent = CryptoAgentWrapper()
+
     def generate_thesis(
         self,
         task: str = "Generate a thesis for the stock",
         stock: str = None,
+        crypto: str = None,
     ) -> str:
         """
         Generate trading thesis for a given stock.
@@ -257,7 +265,7 @@ class TradingDirector:
             """
 
             thesis = self.director_agent.run(prompt)
-            return thesis
+            return thesis, market_data
 
         except Exception as e:
             logger.error(
@@ -269,6 +277,34 @@ class TradingDirector:
         return self.director_agent.run(
             f"According to the thesis, {thesis}, should we execute this order: {task}"
         )
+
+    def generate_thesis_crypto(
+        self,
+        task: str = None,
+        crypto: str = None,
+    ):
+        logger.info(f"Generating thesis for {crypto}")
+        try:
+            market_data = self.crypto_agent.run(
+                crypto,
+                f"{task} Analyze current market conditions and key metrics for {crypto}",
+            )
+
+            prompt = f"""
+            Task: {task}
+            \n
+            Stock: {crypto}
+            Market Data: {market_data}
+            """
+
+            thesis = self.director_agent.run(prompt)
+            return thesis
+
+        except Exception as e:
+            logger.error(
+                f"Error generating thesis for {crypto}: {str(e)}"
+            )
+            raise
 
 
 class QuantAnalyst:
@@ -406,16 +442,18 @@ class AutoFund:
                 logger.info(f"Processing {stock}")
 
                 # Generate thesis
-                thesis = self.director.generate_thesis(
+                thesis, market_data = self.director.generate_thesis(
                     task=task, stock=stock
                 )
 
                 # Perform analysis
-                analysis = self.quant.analyze(stock, thesis)
+                analysis = self.quant.analyze(
+                    stock + market_data, thesis
+                )
 
                 # Assess risk
                 risk_assessment = self.risk.assess_risk(
-                    stock, thesis, analysis
+                    stock + market_data, thesis, analysis
                 )
 
                 # # Generate order if approved
@@ -426,7 +464,9 @@ class AutoFund:
                 order = str(order)
 
                 # Final decision
-                decision = self.director.make_decision(order, thesis)
+                decision = self.director.make_decision(
+                    order + market_data + risk_assessment, thesis
+                )
 
                 log = AutoHedgeOutput(
                     thesis=thesis,
