@@ -320,6 +320,166 @@ classDiagram
     AutoFund --> ExecutionAgent
 ```
 
+
+
+### API Documentation
+To use the API, git clone the repo: 
+
+### 1. Installation
+```bash
+pip3 install -r requirements.txt
+```
+
+### 2. Launch API Server
+
+```bash
+python api.py
+```
+
+Server will start at `http://localhost:8000`
+
+## API Endpoints
+
+### Authentication
+All endpoints except `/users` (POST) require the `X-API-Key` header.
+
+### User Management
+
+#### Create User
+```bash
+POST /users
+Content-Type: application/json
+
+{
+    "username": "trader1",
+    "email": "trader@example.com",
+    "fund_name": "Alpha Fund",
+    "fund_description": "AI Trading Strategy"
+}
+```
+Returns API key in response.
+
+#### Get User Profile
+```bash
+GET /users/me
+X-API-Key: your-api-key
+```
+
+### Trading Operations
+
+#### Create Trade
+```bash
+POST /trades
+X-API-Key: your-api-key
+Content-Type: application/json
+
+{
+    "stocks": ["NVDA", "AAPL"],
+    "task": "Analyze tech stocks for $1M allocation",
+    "allocation": 1000000.0,
+    "strategy_type": "momentum",
+    "risk_level": 7
+}
+```
+
+#### List Trades
+```bash
+GET /trades?limit=10&skip=0&status=completed
+X-API-Key: your-api-key
+```
+
+#### Get Specific Trade
+```bash
+GET /trades/{trade_id}
+X-API-Key: your-api-key
+```
+
+#### Delete Trade
+```bash
+DELETE /trades/{trade_id}
+X-API-Key: your-api-key
+```
+
+### Analytics
+
+#### Get Historical Analytics
+```bash
+GET /analytics/history?days=30
+X-API-Key: your-api-key
+```
+
+## Quick Test Script
+
+```python
+import requests
+
+BASE_URL = "http://localhost:8000"
+
+# Create user and get API key
+def get_api_key():
+    response = requests.post(
+        f"{BASE_URL}/users",
+        json={
+            "username": "test_trader",
+            "email": "test@example.com",
+            "fund_name": "Test Fund",
+            "fund_description": "Test Strategy"
+        }
+    )
+    return response.json()["api_key"]
+
+# Use the API
+api_key = get_api_key()
+headers = {"X-API-Key": api_key}
+
+# Create a trade
+trade = requests.post(
+    f"{BASE_URL}/trades",
+    headers=headers,
+    json={
+        "stocks": ["NVDA"],
+        "task": "Test trade",
+        "allocation": 1000000.0
+    }
+)
+print(trade.json())
+```
+
+## Running in Production
+1. Use a production ASGI server:
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+2. Set environment variables:
+
+```bash
+export AUTOHEDGE_ENV=production
+export AUTOHEDGE_LOG_LEVEL=INFO
+```
+
+## Error Codes
+- 401: Invalid API key
+- 403: Unauthorized access
+- 404: Resource not found
+- 422: Validation error
+- 500: Server error
+
+## Best Practices
+1. Store API keys securely
+2. Use appropriate error handling
+3. Implement rate limiting in production
+4. Monitor API usage
+5. Regularly backup trade data
+
+## Interactive Documentation
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+
+
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
