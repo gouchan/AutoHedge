@@ -8,7 +8,7 @@ stocks = ["NVDA"]
 trading_system = AutoFund(
     name="swarms-fund",
     description="Private Hedge Fund for Swarms Corp",
-    stocks=stocks
+    stocks=stocks,
 )
 
 # Define the task for the trading cycle
