@@ -128,11 +128,13 @@ logger.add(
 
 
 class AutoHedgeAPI:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.app = FastAPI(
             title="AutoHedge API",
             version="1.0.0",
             description="Production-grade API for automated hedge fund management",
+            *args,
+            **kwargs
         )
         self.api_key_header = APIKeyHeader(name="X-API-Key")
         self.users: Dict[str, User] = {}
